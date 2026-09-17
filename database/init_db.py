@@ -1,39 +1,32 @@
 """
-Database initialisation.
+Database initialization for the Mobile Device Forensic Analysis System.
 
-`init_db()` is the one function the application calls at startup.
-Right now it only makes sure the database file exists and can be opened.
-
-No application tables are created here yet. When the team is ready to add
-tables, this is the file where those CREATE TABLE statements will go.
+init_db() is the single function the rest of the team calls at application
+startup. Right now it only makes sure the database file exists and can be
+opened. Table creation will be added here later.
 """
 
-from .connection import DB_PATH, get_connection
+from .connection import DATABASE_PATH, get_connection
 
 
 def init_db() -> None:
     """
-    Prepare the database so the rest of the application can use it.
+    Prepare the database so the application can start.
 
-    Steps:
-      1. Open a connection. SQLite creates database/forensic.db if missing.
-      2. Run a harmless query to confirm the file really works.
-      3. Commit and close.
-
-    Safe to call every time the app starts - it does nothing destructive.
+    Opening a connection is enough to create forensic.db on disk if it is
+    not there yet. Running this more than once is safe.
     """
     connection = get_connection()
     try:
-        # A tiny query that always succeeds on a healthy database.
+        # A trivial query that proves the file opened and SQLite is responding.
         connection.execute("SELECT 1;")
         connection.commit()
-        print(f"[database] Ready at: {DB_PATH}")
     finally:
-        # Always close, even if something above raised an error.
         connection.close()
 
+    print(f"[database] Ready at: {DATABASE_PATH}")
 
-# Lets you run this file directly to create the database:
-#     python -m database.init_db
+
 if __name__ == "__main__":
+    # Lets you run:  python -m database.init_db
     init_db()
