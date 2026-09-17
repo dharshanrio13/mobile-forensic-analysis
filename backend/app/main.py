@@ -8,10 +8,13 @@ has been added yet.
 
 from fastapi import FastAPI
 
+from app.core.config import settings
+
 app = FastAPI(
-    title="Mobile Device Forensic Analysis System",
+    title=settings.APP_NAME,
     description="Backend foundation for analyzing simulated mobile-device evidence.",
     version="0.1.0",
+    debug=settings.DEBUG,
 )
 
 
