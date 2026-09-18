@@ -1,14 +1,8 @@
-"""
-Mobile Device Forensic Analysis System - Backend Foundation
-
-Minimal FastAPI application. This is the starting point only:
-no database, auth, upload, parsing, timeline, or AI functionality
-has been added yet.
-"""
-
 from fastapi import FastAPI
 
 from app.core.config import settings
+from app.api.routes.cases import router as cases_router
+from app.api.routes.evidence import router as evidence_router   # <- is this line present?
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -17,8 +11,10 @@ app = FastAPI(
     debug=settings.DEBUG,
 )
 
+app.include_router(cases_router)
+app.include_router(evidence_router)   # <- is this line present?
+
 
 @app.get("/health")
 def health_check():
-    """Simple health check to confirm the backend is running."""
     return {"status": "ok"}
