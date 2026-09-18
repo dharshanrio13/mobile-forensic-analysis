@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investigation Report — Forensic Lens</title>
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <a href="../index.html" class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text">Forensic Lens<span class="sub">Mobile Device Analysis</span></span>
+    </a>
+
+    <div class="case-chip">
+      <div class="id mono" data-case-id>Not available</div>
+      <div class="meta" data-case-meta></div>
+    </div>
+
+    <nav class="side-nav" aria-label="Case sections">
+      <a class="nav-item" href="evidence.html">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Evidence
+      </a>
+      <a class="nav-item" href="dashboard.html">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="timeline (1).html">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="4" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="12" cy="8" r="1.3" fill="currentColor"/><path d="M4 8h8" stroke="currentColor" stroke-width="1"/></svg>
+        Timeline
+      </a>
+      <a class="nav-item" href="locations.html">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 14s4.5-4.2 4.5-7.5A4.5 4.5 0 108 2a4.5 4.5 0 00-4.5 4.5C3.5 9.8 8 14 8 14z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="6.3" r="1.6" stroke="currentColor" stroke-width="1.1"/></svg>
+        Location
+      </a>
+      <a class="nav-item" href="report.html">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 2.5h5.5l2.5 2.5v8.5a1 1 0 01-1 1h-7a1 1 0 01-1-1v-10a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M5.5 8h5M5.5 10.3h5" stroke="currentColor" stroke-width="1"/></svg>
+        Report
+      </a>
+    </nav>
+
+    <div class="sidebar-foot">Simulated evidence, real backend — hackathon build</div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <div class="case-line">
+        <span class="mono" data-topbar-case-id>—</span>
+        <span>&middot;</span>
+        <span data-topbar-case-date>Not available</span>
+      </div>
+      <span class="status-pill"><span class="status-dot"></span><span data-case-status>Not available</span></span>
+    </div>
+
+    <section class="view">
+      <div class="report-header">
+        <div class="page-head" style="margin-bottom:0;">
+          <h1>Investigation report</h1>
+          <p>A compiled summary of what was found across evidence, timeline, and location for this case.</p>
+        </div>
+        <button type="button" class="btn btn-primary" id="export-report" disabled>Export as PDF</button>
+      </div>
+
+      <div class="disclaimer-banner">
+        This report summarizes patterns observed in simulated evidence. It does not establish intent, wrongdoing, or legal conclusions.
+      </div>
+
+      <div class="panel" id="report-empty">
+        <div class="empty-note">Not available</div>
+      </div>
+      <div class="panel" id="report-loading" style="display:none;">
+        <div class="empty-note">Loading report…</div>
+      </div>
+      <div class="panel" id="report-error" style="display:none;">
+        <div class="empty-note">Couldn't load the report.<br><span data-error-message class="mono" style="font-size:12px;"></span></div>
+      </div>
+
+      <div id="report-populated" style="display:none;">
+        <div class="two-col">
+          <div>
+            <div class="panel report-section" id="section-evidence">
+              <h2>Evidence summary</h2>
+              <ul class="report-summary-list" id="report-evidence-list"></ul>
+            </div>
+
+            <div class="panel report-section" id="section-timeline">
+              <h2>Timeline summary</h2>
+              <ul class="report-summary-list" id="report-timeline-list"></ul>
+            </div>
+
+            <div class="panel report-section" id="section-location">
+              <h2>Location summary</h2>
+              <ul class="report-summary-list" id="report-location-list"></ul>
+            </div>
+
+            <div class="panel report-section" id="section-notes">
+              <h2>Investigator notes</h2>
+              <div class="notes-box" id="report-notes">No notes added yet.</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Include in export</h2>
+            <p class="sub">Toggle which sections are included when this report is exported.</p>
+            <div class="step-mini">
+              <label class="step-mini-row current" style="cursor:pointer;">
+                <input type="checkbox" class="report-section-toggle" data-target="#section-evidence" checked>
+                <span class="label">Evidence summary</span>
+              </label>
+              <label class="step-mini-row current" style="cursor:pointer;">
+                <input type="checkbox" class="report-section-toggle" data-target="#section-timeline" checked>
+                <span class="label">Timeline summary</span>
+              </label>
+              <label class="step-mini-row current" style="cursor:pointer;">
+                <input type="checkbox" class="report-section-toggle" data-target="#section-location" checked>
+                <span class="label">Location summary</span>
+              </label>
+              <label class="step-mini-row current" style="cursor:pointer;">
+                <input type="checkbox" class="report-section-toggle" data-target="#section-notes" checked>
+                <span class="label">Investigator notes</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/navigation.js"></script>
+<script src="../js/cases.js"></script>
+<script src="../js/reports.js"></script>
+</body>
+</html>

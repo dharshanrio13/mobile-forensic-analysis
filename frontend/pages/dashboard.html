@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Case Overview — Forensic Lens</title>
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <a href="../frontend.html" class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-text">Forensic Lens<span class="sub">Mobile Device Analysis</span></span>
+    </a>
+
+    <div class="case-chip">
+      <div class="id mono">Case FL-2026-0417</div>
+      <div class="meta">Simulated Android device</div>
+    </div>
+
+    <nav class="side-nav" aria-label="Case sections">
+      <a class="nav-item" href="evidence.html">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Evidence
+      </a>
+      <a class="nav-item" href="dashboard.html">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="timeline.html">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="4" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="12" cy="8" r="1.3" fill="currentColor"/><path d="M4 8h8" stroke="currentColor" stroke-width="1"/></svg>
+        Timeline
+      </a>
+      <a class="nav-item" href="locations.html">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 14s4.5-4.2 4.5-7.5A4.5 4.5 0 108 2a4.5 4.5 0 00-4.5 4.5C3.5 9.8 8 14 8 14z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="6.3" r="1.6" stroke="currentColor" stroke-width="1.1"/></svg>
+        Location
+      </a>
+      <a class="nav-item" href="report.html">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 2.5h5.5l2.5 2.5v8.5a1 1 0 01-1 1h-7a1 1 0 01-1-1v-10a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M5.5 8h5M5.5 10.3h5" stroke="currentColor" stroke-width="1"/></svg>
+        Report
+      </a>
+    </nav>
+
+    <div class="sidebar-foot">Simulated data only — hackathon build</div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <div class="case-line">
+        <span class="mono">FL-2026-0417</span>
+        <p></p>
+        <span id ="date-time-display"></span>
+      </div>
+      <span class="status-pill"><span class="status-dot"></span>Analysis complete</span>
+    </div>
+
+    <section class="view">
+      <div class="page-head">
+        <h1>Case overview</h1>
+        <p>A summary of what's been recorded for this device. Open any section for the full detail.</p>
+      </div>
+
+      <div class="grid-4">
+        <a class="module-card" href="evidence.html">
+          <div class="module-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5 8l2 2 4-4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Evidence Analysis</h3>
+          <p class="stat"></p>
+          <p class="updated"></p>
+        </a>
+        <a class="module-card" href="timeline.html">
+          <div class="module-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="4" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="12" cy="8" r="1.3" fill="currentColor"/><path d="M4 8h8" stroke="currentColor" stroke-width="1"/></svg></div>
+          <h3>Activity Timeline</h3>
+          <p class="stat">events recorder</p>
+          <p class="updated">Spans Sep 1 <span class ="boxed-divider">-</span>Sep 14</p>
+        </a>
+        <a class="module-card" href="locations.html">
+          <div class="module-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 14s4.5-4.2 4.5-7.5A4.5 4.5 0 108 2a4.5 4.5 0 00-4.5 4.5C3.5 9.8 8 14 8 14z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="6.3" r="1.6" stroke="currentColor" stroke-width="1.1"/></svg></div>
+          <h3>Location History</h3>
+          <p class="stat">points/locations recorder</p>
+          <p class="updated"></p>
+        </a>
+        <a class="module-card" href="report.html">
+          <div class="module-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 2.5h5.5l2.5 2.5v8.5a1 1 0 01-1 1h-7a1 1 0 01-1-1v-10a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M5.5 8h5M5.5 10.3h5" stroke="currentColor" stroke-width="1"/></svg></div>
+          <h3>Investigation Report</h3>
+          <p class="stat">Draft in progress</p>
+          <p class="updated"></p>
+        </a>
+      </div>
+
+      <div class="two-col">
+        <div class="panel">
+          <h2>Recent activity</h2>
+          <p class="sub">The five most recent events across all sources.</p>
+          <div class="activity-row"><span class="t mono">6:42 PM</span><span class="d">Location point recorded near last known area</span></div>
+          <div class="activity-row"><span class="t mono">5:58 PM</span><span class="d">Outgoing call, duration 4m12s</span></div>
+          <div class="activity-row"><span class="t mono">5:31 PM</span><span class="d">Message thread opened in Messaging app</span></div>
+          <div class="activity-row"><span class="t mono">4:07 PM</span><span class="d">App activity logged: Maps</span></div>
+          <div class="activity-row"><span class="t mono">2:15 PM</span><span class="d">Device unlocked</span></div>
+        </div>
+        <div class="panel">
+          <h2>Case notes</h2>
+          <p class="sub">Visible only within this case.</p>
+          <div class="notes-box">No notes added yet. Notes you add here will be saved with the case.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="../js/date.js"></script>
+<script src="../js/navigation.js"></script>
+<script src="../js/dashboard.js"></script>
+</body>
+</html>
