@@ -1,12 +1,8 @@
-from app.parsers.system_log_parser import parse_system_log_batch
-records = [
-    {"timestamp": "2026-09-17T09:00:00+05:30"},                              # neither event nor message
-    {"event": "kernel_panic", "level": "critical"},                          # missing timestamp
-    {"timestamp": "bad-timestamp", "event": "wifi_connected"},               # unparseable timestamp
-    "not a dict",                                                            # wrong type entirely
-]
+import zipfile, json
+from app.services.extraction_service import extract_evidence_zip
+zi_zip = zipfile.ZipFile("evil_evidence.zip", "w")
+zi_zip.writestr("calls.json", "[]")
+zi_zip.writestr("../../etc/evil_cron", "malicious payload")
+zi_zip.close()
 
-result = parse_system_log_batch(records, case_id="CASE-2026-0042")
-print(len(result.events), "parsed successfully")
-for err in result.errors:
-    print(" ", err["reason"])
+extract_evidence_zip("evil_evidence.zip", case_id="CASE-TEST-002")
