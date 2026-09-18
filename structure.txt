@@ -1,123 +1,49 @@
-mobile-forensic-analysis/
+backend/
 │
-├── backend/
-│   ├── app/
-│   │   ├── main.py
-│   │   │
-│   │   ├── core/
-│   │   │   ├── config.py
-│   │   │   └── security.py
-│   │   │
-│   │   ├── api/
-│   │   │   ├── routes/
-│   │   │   │   ├── cases.py
-│   │   │   │   ├── evidence.py
-│   │   │   │   ├── events.py
-│   │   │   │   ├── locations.py
-│   │   │   │   ├── analysis.py
-│   │   │   │   └── reports.py
-│   │   │   └── dependencies.py
-│   │   │
-│   │   ├── models/
-│   │   │   ├── case.py
-│   │   │   ├── evidence.py
-│   │   │   ├── event.py
-│   │   │   ├── location.py
-│   │   │   └── chain_of_custody.py
-│   │   │
-│   │   ├── schemas/
-│   │   │   ├── case.py
-│   │   │   ├── evidence.py
-│   │   │   ├── event.py
-│   │   │   ├── location.py
-│   │   │   └── report.py
-│   │   │
-│   │   ├── services/
-│   │   │   ├── evidence_service.py
-│   │   │   ├── parser_service.py
-│   │   │   ├── normalization_service.py
-│   │   │   ├── timeline_service.py
-│   │   │   ├── correlation_service.py
-│   │   │   ├── integrity_service.py
-│   │   │   └── report_service.py
-│   │   │
-│   │   ├── parsers/
-│   │   │   ├── app_parser.py
-│   │   │   ├── call_parser.py
-│   │   │   ├── message_parser.py
-│   │   │   ├── location_parser.py
-│   │   │   └── system_log_parser.py
-│   │   │
-│   │   └── database/
-│   │       ├── connection.py
-│   │       ├── base.py
-│   │       └── seed.py
+├── app/
+│   ├── main.py
 │   │
-│   ├── tests/
-│   │   ├── test_cases.py
-│   │   ├── test_evidence.py
-│   │   ├── test_parsers.py
-│   │   ├── test_timeline.py
-│   │   └── test_analysis.py
+│   ├── core/
+│   │   └── config.py
 │   │
-│   ├── requirements.txt
-│   └── README.md
+│   ├── api/
+│   │   └── routes/
+│   │       ├── cases.py
+│   │       ├── evidence.py
+│   │       ├── timeline.py
+│   │       ├── locations.py
+│   │       ├── communications.py
+│   │       ├── analysis.py
+│   │       └── reports.py
+│   │
+│   ├── models/
+│   │   ├── case.py
+│   │   ├── evidence.py
+│   │   └── event.py
+│   │
+│   ├── schemas/
+│   │   ├── case.py
+│   │   ├── evidence.py
+│   │   └── event.py
+│   │
+│   ├── parsers/
+│   │   ├── app_parser.py
+│   │   ├── call_parser.py
+│   │   ├── message_parser.py
+│   │   ├── location_parser.py
+│   │   └── system_log_parser.py
+│   │
+│   └── services/
+│       ├── evidence_service.py
+│       ├── extraction_service.py
+│       ├── normalization_service.py
+│       ├── timeline_service.py
+│       ├── correlation_service.py
+│       ├── integrity_service.py
+│       └── report_service.py
 │
-├── frontend/
-│   ├── index.html
-│   │
-│   ├── pages/
-│   │   ├── dashboard.html
-│   │   ├── create-case.html
-│   │   ├── evidence.html
-│   │   ├── timeline.html
-│   │   ├── communications.html
-│   │   ├── locations.html
-│   │   ├── system-logs.html
-│   │   ├── analysis.html
-│   │   └── report.html
-│   │
-│   ├── css/
-│   │   ├── global.css
-│   │   ├── landing.css
-│   │   ├── dashboard.css
-│   │   ├── timeline.css
-│   │   ├── map.css
-│   │   └── responsive.css
-│   │
-│   ├── js/
-│   │   ├── api.js
-│   │   ├── navigation.js
-│   │   ├── dashboard.js
-│   │   ├── cases.js
-│   │   ├── evidence.js
-│   │   ├── timeline.js
-│   │   ├── communications.js
-│   │   ├── locations.js
-│   │   ├── analysis.js
-│   │   └── reports.js
-│   │
-│   └── assets/
-│       ├── images/
-│       └── icons/
-│
-├── database/
-│   ├── schema.sql
-│   └── seed_data.sql
-│
-├── sample-data/
-│   ├── apps.json
-│   ├── calls.json
-│   ├── messages.json
-│   ├── locations.json
-│   └── system_logs.json
-│
-├── docs/
-│   ├── architecture.md
-│   ├── api-documentation.md
-│   ├── database-design.md
-│   └── user-flow.md
-│
-├── .gitignore
-├── README.md
-└── LICENSE
+├── uploads/
+├── temp/
+├── tests/
+├── requirements.txt
+└── README.md
