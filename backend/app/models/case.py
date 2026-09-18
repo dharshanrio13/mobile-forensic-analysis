@@ -1,51 +1,36 @@
 """
-Case model.
+Case data model.
 
-A Case represents a single forensic investigation. All other records
-(Evidence, Event, Location, and later Communication /
-ChainOfCustody) belong to a Case.
+This is a plain Pydantic model, NOT a database model - there is no
+database in this project. It represents an investigation case as an
+in-memory/API data structure: something a route can accept as input,
+return as output, or a service can pass around internally.
+
+Since there's no database to auto-generate IDs or timestamps, both
+`id` and `created_at` are given sensible defaults here so a Case can
+be created easily (e.g. `Case(name="...", description="...")`) while
+still being fully overridable when needed.
 """
 
+import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer, String, Text, DateTime
-from sqlalchemy.orm import relationship
-
-from app.database.base import Base
+from pydantic import BaseModel, Field
 
 
-class Case(Base):
-    """A forensic investigation case."""
+class Case(BaseModel):
+    """An investigation case."""
 
-    __tablename__ = "cases"
+    # Unique identifier for the case. Defaults to a randomly generated
+    # UUID string so callers don't have to supply one themselves.
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
 
-    id = Column(Integer, primary_key=True, index=True)
+    # Short human-readable name/title for the case.
+    name: str
 
-    # Short human-readable name/title for the case, e.g. "Case #2026-014".
-    name = Column(String(255), nullable=False)
+    # Longer free-text description of what the case covers.
+    description: str
 
-    # Free-text description of the case (optional).
-    description = Column(Text, nullable=True)
-
-    created_at = Column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        nullable=False,
-    )
-
-    # A Case can have many Evidence items, Events, and Locations.
-    # `back_populates` keeps both sides of the relationship in sync.
-    # `cascade="all, delete-orphan"` means deleting a Case also removes
-    # its related records, so the database never keeps orphaned rows.
-    evidence_items = relationship(
-        "Evidence", back_populates="case", cascade="all, delete-orphan"
-    )
-    events = relationship(
-        "Event", back_populates="case", cascade="all, delete-orphan"
-    )
-    locations = relationship(
-        "Location", back_populates="case", cascade="all, delete-orphan"
-    )
-
-    def __repr__(self):
-        return f"<Case id={self.id} name={self.name!r}>"
+    # When the case was created. Defaults to "now" (UTC) at creation
+    # time, similar to how a database would auto-populate a timestamp.
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
