@@ -1,25 +1,30 @@
 """
-Standalone command-line test for app/services/correlation_service.py.
+Standalone command-line test for app/services/integrity_service.py.
 
 Run it from the backend/ directory (with your venv active):
 
-    python test_correlation.py
+    python test_integrity.py
 
-No pytest needed - this is a plain script. It builds a small,
-realistic set of Event objects, runs them through every correlation
-rule, prints what was found and why, and then runs a handful of
-sanity checks (including a determinism check and a forensic-wording
-check) so you can see at a glance whether the service is behaving
-correctly.
+No pytest needed - this is a plain script. It creates a real temp
+file, hashes it, demonstrates a matching and a mismatching hash
+comparison, demonstrates that the same content hashed twice always
+produces the same digest, and checks a few error cases (missing
+file, a directory instead of a file). All temp files are cleaned up
+automatically when the script finishes.
 
 Exit code: 0 if every check passes, 1 if any check fails.
 """
 
+import hashlib
+import os
 import sys
-from datetime import datetime, timezone
+import tempfile
 
-from app.models.event import Event, EventCategory
-from app.services.correlation_service import correlate_events, DEFAULT_TIME_WINDOW
+from app.services.integrity_service import (
+    calculate_sha256,
+    compare_hashes,
+    verify_file_integrity,
+)
 
 _checks_failed = []
 
@@ -31,92 +36,74 @@ def check(description, condition):
         _checks_failed.append(description)
 
 
-def make_event(hour, minute, category, event_type, description, metadata=None):
-    return Event(
-        case_id="CASE-001",
-        timestamp=datetime(2026, 9, 17, hour, minute, tzinfo=timezone.utc),
-        category=category,
-        event_type=event_type,
-        source="demo",
-        description=description,
-        metadata=metadata or {},
-    )
-
-
 def main():
-    phone = "+1-555-0199"
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        # --- a small test "evidence" file with known content ---
+        file_path = os.path.join(tmp_dir, "evidence_sample.json")
+        original_content = b'{"note": "simulated evidence file for integrity testing"}'
+        with open(file_path, "wb") as f:
+            f.write(original_content)
 
-    events = [
-        make_event(  # #1
-            10, 0, EventCategory.CALL, "call_incoming", "Incoming call",
-            metadata={"caller": phone, "receiver": "self", "direction": "incoming"},
-        ),
-        make_event(  # #2 - shares phone number with #1, and close in time to it
-            10, 5, EventCategory.MESSAGE, "message_outgoing", "Outgoing message",
-            metadata={"sender": "self", "receiver": phone, "direction": "outgoing"},
-        ),
-        make_event(  # #3 - a location fix, close in time to #1 and #2, shares no identifier
-            10, 3, EventCategory.LOCATION, "gps_fix", "Location recorded near Downtown office",
-            metadata={"latitude": 12.6271, "longitude": 80.1927},
-        ),
-        make_event(  # #4 - unrelated: far away in time, no shared identifier
-            20, 0, EventCategory.APP, "app_open", "Camera opened",
-            metadata={"app": "Camera", "action": "OPEN"},
-        ),
-    ]
-    id_to_label = {event.id: f"#{i + 1}" for i, event in enumerate(events)}
+        # The independently-computed "known correct" hash, using the
+        # standard library directly (not the service under test), so
+        # the demonstration doesn't just check the service against
+        # itself.
+        expected_hash = hashlib.sha256(original_content).hexdigest()
 
-    print("--- INPUT EVENTS ---")
-    for label, event in zip(id_to_label.values(), events):
-        print(f"{label}: {event.timestamp.strftime('%H:%M')}  {event.category:9s} {event.event_type:16s} {event.description}")
-    print()
+        print("--- HASHING A TEST FILE ---")
+        calculated_hash = calculate_sha256(file_path)
+        print(f"file            : {file_path}")
+        print(f"calculated hash : {calculated_hash}")
+        print(f"expected hash   : {expected_hash}")
+        print()
+        check("calculate_sha256 matches an independently computed hashlib digest", calculated_hash == expected_hash)
 
-    print(f"--- CORRELATIONS (default window = {int(DEFAULT_TIME_WINDOW.total_seconds() // 60)} min) ---")
-    results = correlate_events(events)
-    for result in results:
-        labels = [id_to_label[eid] for eid in result.related_event_ids]
-        print(f"{result.correlation_id}  [{result.rule}]  related={labels}")
-        print(f"    reason : {result.reason}")
-        print(f"    context: {result.context}")
-    print()
+        print()
+        print("--- MATCHING HASH ---")
+        match_result = verify_file_integrity(file_path, expected_sha256=expected_hash)
+        print(match_result)
+        check("verify_file_integrity reports success=True for a readable file", match_result.success)
+        check("verify_file_integrity reports match=True when the hash is correct", match_result.match is True)
 
-    # --- sanity checks ---
-    print("--- CHECKS ---")
+        print()
+        print("--- MISMATCHING HASH (simulating a tampered/corrupted file) ---")
+        wrong_hash = "0" * 64
+        mismatch_result = verify_file_integrity(file_path, expected_sha256=wrong_hash)
+        print(mismatch_result)
+        check("verify_file_integrity reports match=False when the hash is wrong", mismatch_result.match is False)
+        check("verify_file_integrity still reports success=True (the file itself was read fine)", mismatch_result.success)
 
-    rules_found = {r.rule for r in results}
-    check(
-        "all three rule types produced at least one result",
-        rules_found == {"time_window", "shared_identifier", "location_proximity"},
-    )
+        print()
+        print("--- CASE-INSENSITIVE / WHITESPACE-TOLERANT COMPARISON ---")
+        messy_hash = f"  {expected_hash.upper()}\n"
+        loose_match = compare_hashes(calculated_hash, messy_hash)
+        print(f"compare_hashes(calculated, {messy_hash!r}) -> {loose_match}")
+        check("compare_hashes tolerates case and surrounding whitespace", loose_match is True)
 
-    call_and_message = next(
-        (r for r in results if r.rule == "shared_identifier"), None
-    )
-    check(
-        "shared_identifier correlation links the call (#1) and message (#2)",
-        call_and_message is not None
-        and set(call_and_message.related_event_ids) == {events[0].id, events[1].id},
-    )
+        print()
+        print("--- DETERMINISM: hashing the same content twice ---")
+        second_hash = calculate_sha256(file_path)
+        check("hashing the same file twice gives the identical digest", calculated_hash == second_hash)
 
-    event_4_id = events[3].id
-    check(
-        "the unrelated event (#4) appears in zero correlations",
-        all(event_4_id not in r.related_event_ids for r in results),
-    )
+        print()
+        print("--- ERROR HANDLING ---")
+        missing_result = verify_file_integrity(os.path.join(tmp_dir, "does_not_exist.json"))
+        print(missing_result)
+        check("a missing file returns success=False with an error message (no exception raised)", not missing_result.success and missing_result.error)
 
-    results_again = correlate_events(events)
-    check(
-        "running correlate_events twice on the same input gives identical output (determinism)",
-        [(r.correlation_id, r.related_event_ids) for r in results]
-        == [(r.correlation_id, r.related_event_ids) for r in results_again],
-    )
+        directory_result = verify_file_integrity(tmp_dir)
+        print(directory_result)
+        check("passing a directory returns success=False with an error message (no exception raised)", not directory_result.success and directory_result.error)
 
-    forbidden_words = ["prove", "proves", "proven", "guilt", "guilty", "criminal", "perpetrator"]
-    all_reason_text = " ".join(r.reason for r in results).lower()
-    check(
-        "no accusatory/conclusive wording (prove, guilt, criminal, ...) appears in any reason",
-        not any(word in all_reason_text for word in forbidden_words),
-    )
+        print()
+        print("--- LARGE-ISH FILE (confirms chunked reading works, not just tiny files) ---")
+        big_file_path = os.path.join(tmp_dir, "big_evidence_file.bin")
+        big_content = os.urandom(5 * 1024 * 1024)  # 5 MB of random bytes
+        with open(big_file_path, "wb") as f:
+            f.write(big_content)
+        big_expected = hashlib.sha256(big_content).hexdigest()
+        big_calculated = calculate_sha256(big_file_path, chunk_size=8192)  # force many small chunks
+        check("a 5 MB file hashed in small 8 KB chunks matches the expected digest", big_calculated == big_expected)
 
     print()
     if _checks_failed:
