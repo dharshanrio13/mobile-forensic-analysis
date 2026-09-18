@@ -1,14 +1,17 @@
 /* ==========================================================================
    Forensic Lens — evidence.js
-   Wires the dropzone/browse UI to a real upload through api.js. Drag/drop
-   and file-picker DOM logic is unchanged from before; what changed is
-   that selecting a file now calls Api.uploadEvidence() instead of just
-   inserting a row.
+   Wires the dropzone/browse UI to a real upload through api.js, and
+   loads the evidence already registered for this case so the table
+   isn't empty after a page reload.
 
-   The evidence-upload response shape isn't finalized on the backend yet
-   (see integration notes), so normalizeEvidenceResponse() below is an
-   isolated adapter — update ONLY that function when the real fields are
-   confirmed, rather than the event-handling code around it.
+   Fixed in this integration pass: the old normalizeEvidenceResponse()
+   guessed at field names and mapped the backend's real
+   processing_status of "processed" to a "Parsing" pill (because the
+   string contains "process"). Status mapping now lives in
+   Shape.upload(), written against the actual contract:
+   processed | processed_with_warnings | no_supported_evidence.
+
+   The manual case-id box is gone — cases.html is a real picker now.
    ========================================================================== */
 
 (function () {
@@ -17,25 +20,13 @@
   const fileInput = document.querySelector('#evidence-file-input');
   const tableBody = document.querySelector('#file-table-body');
   const emptyRow = document.querySelector('#file-table-empty');
-  const caseIdInput = document.querySelector('#case-id-input');
-  const caseIdSetBtn = document.querySelector('#case-id-set-btn');
-
-  // There's no case-creation/picker page yet, so this is the one place a
-  // case id can be set manually. Prefill from whatever's already active.
-  if (caseIdInput) {
-    const existing = CaseState.getCurrentCaseId();
-    if (existing) caseIdInput.value = existing;
-  }
-  if (caseIdSetBtn && caseIdInput) {
-    caseIdSetBtn.addEventListener('click', () => {
-      const value = caseIdInput.value.trim();
-      if (!value) return;
-      CaseState.setCurrentCaseId(value);
-      location.reload(); // refresh so the sidebar/topbar (cases.js) picks it up
-    });
-  }
+  const detailPanel = document.querySelector('#upload-detail');
 
   if (!dropzone) return;
+
+  const caseId = CaseState.getCurrentCaseId();
+
+  loadExistingEvidence();
 
   ['dragenter', 'dragover'].forEach((evt) => {
     dropzone.addEventListener(evt, (e) => {
@@ -61,75 +52,110 @@
     });
   }
 
+  // ---- Already-registered evidence ------------------------------------
+  function loadExistingEvidence() {
+    if (!caseId) return;
+    Api.getEvidence(caseId)
+      .then((data) => {
+        if (!data || !data.total_files) return;
+        if (emptyRow) emptyRow.style.display = 'none';
+        data.files.forEach((file) => {
+          const pkg = data.packages[0] || {};
+          addRow({
+            name: file.filename,
+            size: '—',
+            statusLabel: 'Registered',
+            statusClass: 'pill-ready',
+            added: UI.formatTimestamp(file.uploaded_at),
+            hash: pkg.sha256 ? pkg.sha256.slice(0, 12) : '—'
+          });
+        });
+      })
+      .catch((err) => console.error('evidence.js: could not load existing evidence', err));
+  }
+
+  // ---- Upload ----------------------------------------------------------
   function handleFile(file) {
-    const caseId = CaseState.getCurrentCaseId();
     if (!caseId) {
-      showRowError(file, 'No active case selected');
+      addRow({ name: file.name, size: '—', statusLabel: 'No case', statusClass: 'pill-queued', added: 'Select a case first', hash: '—' });
       return;
     }
 
     if (emptyRow) emptyRow.style.display = 'none';
 
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td class="name mono">${escapeHtml(file.name)}</td>
-      <td>${(file.size / (1024 * 1024)).toFixed(1)} MB</td>
-      <td><span class="pill pill-queued" data-status-pill>Uploading</span></td>
-      <td>Just now</td>
-    `;
-    tableBody.prepend(row);
+    const row = addRow({
+      name: file.name,
+      size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+      statusLabel: 'Uploading',
+      statusClass: 'pill-queued',
+      added: 'Just now',
+      hash: '—'
+    });
     const pill = row.querySelector('[data-status-pill]');
+    const hashCell = row.querySelector('[data-hash-cell]');
 
     Api.uploadEvidence(caseId, file)
       .then((raw) => {
-        const evidence = normalizeEvidenceResponse(raw);
-        pill.textContent = evidence.statusLabel;
-        pill.className = 'pill ' + evidence.statusClass;
+        const result = Shape.upload(raw);
+        pill.textContent = result.statusLabel;
+        pill.className = 'pill ' + result.statusClass;
+        hashCell.textContent = result.shortHash;
+        hashCell.title = result.sha256 || '';
+        renderDetail(result);
       })
       .catch((err) => {
         console.error('evidence.js: upload failed', err);
         pill.textContent = 'Failed';
         pill.className = 'pill pill-queued';
         pill.title = err.message || 'Upload failed';
+        renderError(err);
       });
   }
 
-  function showRowError(file, message) {
-    if (emptyRow) emptyRow.style.display = 'none';
+  function addRow({ name, size, statusLabel, statusClass, added, hash }) {
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td class="name mono">${escapeHtml(file.name)}</td>
-      <td>—</td>
-      <td><span class="pill pill-queued">Failed</span></td>
-      <td>${escapeHtml(message)}</td>
+      <td class="name mono">${UI.escapeHtml(name)}</td>
+      <td>${UI.escapeHtml(size)}</td>
+      <td><span class="pill ${UI.escapeHtml(statusClass)}" data-status-pill>${UI.escapeHtml(statusLabel)}</span></td>
+      <td class="mono" data-hash-cell>${UI.escapeHtml(hash)}</td>
+      <td>${UI.escapeHtml(added)}</td>
     `;
     tableBody.prepend(row);
+    return row;
   }
 
-  // ---- Isolated adapter -------------------------------------------------
-  // The backend evidence-upload response isn't finalized. This function
-  // is the ONLY place that reads its fields, so it's the only place that
-  // needs to change once the contract is confirmed. It defensively checks
-  // a few likely field names rather than assuming one.
-  function normalizeEvidenceResponse(raw) {
-    const status = (raw && (raw.status || raw.processing_status || '')).toLowerCase();
-    if (status.includes('ready') || status.includes('complete') || status.includes('done')) {
-      return { statusLabel: 'Ready', statusClass: 'pill-ready' };
-    }
-    if (status.includes('pars') || status.includes('process')) {
-      return { statusLabel: 'Parsing', statusClass: 'pill-parsing' };
-    }
-    if (status.includes('queue')) {
-      return { statusLabel: 'Queued', statusClass: 'pill-queued' };
-    }
-    // Unknown/unspecified status from the backend — show the raw value
-    // rather than guessing, so it's obvious this needs the adapter updated.
-    return { statusLabel: status ? raw.status : 'Uploaded', statusClass: 'pill-queued' };
+  // Shows what the backend actually reported about the package: the
+  // digest it recorded, which files it extracted, which it skipped, how
+  // many events were produced, and anything that failed to parse.
+  function renderDetail(result) {
+    if (!detailPanel) return;
+    const skipped = result.skippedFiles
+      .map((s) => `${s.entry} (${s.reason})`)
+      .join(', ') || 'None';
+    const warnings = result.warnings.length
+      ? `<li><strong>Warnings:</strong> ${UI.escapeHtml(result.warnings.join(' · '))}</li>`
+      : '';
+    const device = result.deviceInfo
+      ? `<li><strong>Device:</strong> ${UI.escapeHtml(Object.entries(result.deviceInfo).map(([k, v]) => `${k}: ${v}`).join(' · '))}</li>`
+      : '';
+
+    detailPanel.innerHTML = `
+      <ul class="report-summary-list">
+        <li><strong>Status:</strong> ${UI.escapeHtml(result.statusLabel)}</li>
+        <li><strong>SHA-256:</strong> <span class="mono" style="word-break:break-all;">${UI.escapeHtml(result.sha256 || '—')}</span></li>
+        <li><strong>Extracted:</strong> ${UI.escapeHtml(result.extractedFiles.join(', ') || 'None')}</li>
+        <li><strong>Skipped:</strong> ${UI.escapeHtml(skipped)}</li>
+        <li><strong>Events produced:</strong> ${UI.escapeHtml(result.eventCount)}</li>
+        <li><strong>Records that failed to parse:</strong> ${UI.escapeHtml(result.errorCount)}</li>
+        ${device}
+        ${warnings}
+      </ul>
+    `;
   }
 
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+  function renderError(err) {
+    if (!detailPanel) return;
+    detailPanel.innerHTML = `<div class="empty-note">Upload rejected: ${UI.escapeHtml(err.message || 'Unknown error')}</div>`;
   }
 })();

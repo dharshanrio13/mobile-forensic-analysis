@@ -8,12 +8,14 @@ scattered or hardcoded across the codebase.
 Settings can be overridden using environment variables, but sensible
 defaults are provided so the app runs out of the box with no setup.
 
-This project has no database - evidence is simulated JSON data, so
-there is no database configuration here.
+This project has no database - evidence is simulated JSON data held in
+application memory (see app/state.py), so there is no database
+configuration here.
 """
 
 import os
 from pathlib import Path
+from typing import List
 
 # The backend/ directory (two levels up from this file: app/core/config.py).
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -43,9 +45,26 @@ class Settings:
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", str(BASE_DIR / "uploads"))
 
     # Scratch space for any in-progress file handling (e.g. while a file
-    # is being read/validated before it's considered "uploaded").
+    # is being read/validated before it's considered "uploaded"), and
+    # where evidence archives are extracted to.
     # Defaults to backend/temp.
     TEMP_DIR: str = os.getenv("TEMP_DIR", str(BASE_DIR / "temp"))
+
+    # Origins allowed to call this API from a browser. The frontend runs
+    # on a different origin during development, so CORS has to be handled
+    # here on the backend - it cannot be fixed from frontend code.
+    #
+    # Override with a comma-separated list, e.g.:
+    #     export CORS_ORIGINS="http://localhost:5173,http://localhost:3000"
+    #
+    # The default "*" is fine for a local prototype with no
+    # authentication and no credentialed requests. Narrow it before
+    # deploying anywhere real.
+    CORS_ORIGINS: List[str] = [
+        origin.strip()
+        for origin in os.getenv("CORS_ORIGINS", "*").split(",")
+        if origin.strip()
+    ]
 
 
 # A single shared Settings instance, imported wherever configuration

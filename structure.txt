@@ -1,49 +1,60 @@
-backend/
+mobile-forensic-analysis/
 │
-├── app/
-│   ├── main.py
-│   │
-│   ├── core/
-│   │   └── config.py
-│   │
-│   ├── api/
-│   │   └── routes/
-│   │       ├── cases.py
-│   │       ├── evidence.py
-│   │       ├── timeline.py
-│   │       ├── locations.py
-│   │       ├── communications.py
-│   │       ├── analysis.py
-│   │       └── reports.py
-│   │
-│   ├── models/
-│   │   ├── case.py
-│   │   ├── evidence.py
-│   │   └── event.py
-│   │
-│   ├── schemas/
-│   │   ├── case.py
-│   │   ├── evidence.py
-│   │   └── event.py
-│   │
-│   ├── parsers/
-│   │   ├── app_parser.py
-│   │   ├── call_parser.py
-│   │   ├── message_parser.py
-│   │   ├── location_parser.py
-│   │   └── system_log_parser.py
-│   │
-│   └── services/
-│       ├── evidence_service.py
-│       ├── extraction_service.py
-│       ├── normalization_service.py
-│       ├── timeline_service.py
-│       ├── correlation_service.py
-│       ├── integrity_service.py
-│       └── report_service.py
+├── backend/                            FastAPI API — no database
+│   ├── app/
+│   │   ├── main.py                     app, CORS, router registration, /health
+│   │   ├── state.py                    THE in-memory application state
+│   │   ├── core/config.py              APP_NAME, DEBUG, UPLOAD_DIR, TEMP_DIR, CORS_ORIGINS
+│   │   ├── api/routes/
+│   │   │   ├── cases.py                POST/GET /cases, GET /cases/{id}
+│   │   │   ├── evidence.py             POST + GET /cases/{id}/evidence
+│   │   │   ├── timeline.py
+│   │   │   ├── locations.py
+│   │   │   ├── communications.py
+│   │   │   ├── analysis.py
+│   │   │   └── reports.py
+│   │   ├── models/                     Pydantic data models (case, evidence, event)
+│   │   ├── schemas/                    API request/response shapes
+│   │   ├── parsers/                    raw records -> Unified Events
+│   │   └── services/
+│   │       ├── evidence_service.py     validate + save ZIP + invoke extraction
+│   │       ├── extraction_service.py   safe extraction (traversal + zip-bomb limits)
+│   │       ├── processing_service.py   intake -> hash -> JSON -> normalization
+│   │       ├── normalization_service.py
+│   │       ├── timeline_service.py
+│   │       ├── correlation_service.py
+│   │       ├── integrity_service.py
+│   │       └── report_service.py
+│   ├── tests/test_full_integration.py  starts its own Uvicorn process
+│   ├── test.py                         standalone integrity_service checks
+│   ├── test_api.py                     legacy script: needs a running server
+│   ├── uploads/  temp/                 created at runtime
+│   └── requirements.txt
 │
-├── uploads/
-├── temp/
-├── tests/
-├── requirements.txt
-└── README.md
+└── frontend/                           static client — no build step
+    ├── index.html                      landing + backend health check
+    ├── pages/
+    │   ├── cases.html                  create / open a case
+    │   ├── evidence.html               upload + processing result
+    │   ├── dashboard.html              case overview
+    │   ├── timeline.html
+    │   ├── locations.html              Leaflet map
+    │   ├── communications.html         calls + messages
+    │   ├── analysis.html               potentially related events
+    │   └── report.html
+    ├── js/
+    │   ├── api.js                      the ONLY file that talks to the backend
+    │   ├── shape.js                    backend response -> view model (pure)
+    │   ├── ui.js                       shared DOM helpers
+    │   ├── cases.js                    sidebar/topbar case info
+    │   ├── case-manager.js             cases.html
+    │   ├── evidence.js  dashboard.js  timeline.js
+    │   ├── locations.js  communications.js  analysis.js  reports.js
+    │   └── navigation.js
+    └── css/
+        ├── global.css  components.css  dashboard.css
+        ├── timeline.css  map.css  responsive.css
+
+NOTE: there is no database. app/database/ and the SQLAlchemy scratch test were
+removed. Processed cases, evidence and events live in app/state.py for the
+lifetime of the backend process only.
