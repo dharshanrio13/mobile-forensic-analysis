@@ -1,0 +1,68 @@
+/* ==========================================================================
+   Forensic Lens — map.css
+   Extends global.css with rules specific to the location history page.
+   Note: this renders a schematic coordinate plot, not a real map/tile layer.
+   ========================================================================== */
+
+.loc-layout{ display: grid; grid-template-columns: 320px 1fr; gap: 16px; }
+.loc-list{ max-height: 560px; overflow-y: auto; }
+.loc-row{
+  padding: 12px 4px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 12.8px;
+  border-radius: 6px;
+}
+.loc-row:hover{ background: var(--surface-2); }
+.loc-row.active{ background: var(--accent-dim); }
+.loc-row .lt{ color: var(--text-faint); font-size: 11px; }
+.loc-row .lc{ color: var(--text); margin-top: 2px; }
+
+.plot-frame{
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  height: 560px;
+  position: relative;
+  overflow: hidden;
+}
+.plot-label{
+  position: absolute; top: 14px; left: 16px; z-index: 500; font-size: 11px; color: var(--text-faint);
+  background: var(--surface); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border);
+}
+.plot-legend{
+  position: absolute; bottom: 14px; left: 16px; z-index: 500; display: flex; gap: 16px; font-size: 11px; color: var(--text-muted);
+  background: var(--surface); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border);
+}
+.legend-dot{ display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
+
+.plot-point{ cursor: pointer; }
+.plot-point.highlighted{ r: 7; }
+
+/* ---------- Real map (Leaflet) ---------- */
+#leaflet-map{
+  width: 100%;
+  height: 100%;
+}
+/* Dark-theme tint over the default OSM tiles so the map matches the rest
+   of the UI instead of sitting as a bright rectangle in a dark page. */
+#leaflet-map .leaflet-tile-pane{
+  filter: brightness(0.62) invert(1) contrast(0.9) hue-rotate(180deg) saturate(0.6);
+}
+:root[data-theme="light"] #leaflet-map .leaflet-tile-pane{ filter: none; }
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]) #leaflet-map .leaflet-tile-pane{ filter: none; }
+}
+
+.map-fullscreen-btn{
+  position: absolute; top: 14px; right: 16px; z-index: 500;
+  width: 32px; height: 32px; border-radius: 7px;
+  background: var(--surface); border: 1px solid var(--border-strong);
+  color: var(--text); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
+}
+.map-fullscreen-btn:hover{ background: var(--surface-2); border-color: var(--accent); color: var(--accent-bright); }
+
+/* When the plot-frame itself is the fullscreen element */
+.plot-frame:fullscreen{
+  height: 100vh;
+  border-radius: 0;
+}
+.plot-frame:fullscreen #leaflet-map{ height: 100%; }

@@ -1,0 +1,31 @@
+/* ==========================================================================
+   Forensic Lens — responsive.css
+   Breakpoints shared by dashboard, evidence, timeline, locations, and report.
+   Load this AFTER the page-specific stylesheet.
+   ========================================================================== */
+
+@media (max-width: 1180px){
+  .grid-4{ grid-template-columns: repeat(2, 1fr); }
+  .two-col{ grid-template-columns: 1fr; }
+  .loc-layout{ grid-template-columns: 1fr; }
+  .report-meta-grid{ grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px){
+  .app{ grid-template-columns: 200px 1fr; }
+  .view{ padding: 28px 22px 48px; }
+}
+
+@media (max-width: 760px){
+  .app{ grid-template-columns: 1fr; }
+  .sidebar{
+    position: sticky; top: 0; z-index: 20;
+    flex-direction: row; align-items: center; overflow-x: auto;
+    padding: 12px 14px; gap: 10px;
+  }
+  .brand, .case-chip, .sidebar-foot{ display: none; }
+  nav.side-nav{ flex-direction: row; }
+  .grid-4{ grid-template-columns: 1fr; }
+  .report-meta-grid{ grid-template-columns: 1fr; }
+  .topbar{ padding: 0 20px; }
+}
