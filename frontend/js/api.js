@@ -11,7 +11,11 @@
 
 // Change this one line when the backend moves (local dev, staging, etc).
 // Nothing else in the project should ever hard-code a backend URL.
-const API_BASE_URL = "http://127.0.0.1:8000";
+// window.FORENSIC_API_BASE_URL lets a deployment override it without
+// editing this file (set it in a <script> before api.js loads).
+const API_BASE_URL = (typeof window !== "undefined" && window.FORENSIC_API_BASE_URL)
+  ? window.FORENSIC_API_BASE_URL
+  : "http://127.0.0.1:8000";
 
 /* ---------------------------------------------------------------------- */
 /* Active case id                                                          */
@@ -104,6 +108,18 @@ async function request(path, options = {}) {
   return payload;
 }
 
+function queryString(params) {
+  if (!params) return "";
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== null && value !== undefined && value !== "") {
+      search.append(key, value);
+    }
+  });
+  const encoded = search.toString();
+  return encoded ? `?${encoded}` : "";
+}
+
 /* ---------------------------------------------------------------------- */
 /* Endpoints — one function per backend contract entry, nothing invented   */
 /* ---------------------------------------------------------------------- */
@@ -136,8 +152,17 @@ const Api = (function () {
     });
   }
 
-  function getTimeline(caseId) {
-    return request(`/cases/${encodeURIComponent(caseId)}/timeline`);
+  // GET /cases/{case_id}/evidence — what's already registered for this
+  // case. The upload response is per-upload only, so this is how the
+  // evidence table survives a page reload.
+  function getEvidence(caseId) {
+    return request(`/cases/${encodeURIComponent(caseId)}/evidence`);
+  }
+
+  // Optional filters supported by the backend: category, event_type,
+  // start_time, end_time, order. Omit `filters` for the full timeline.
+  function getTimeline(caseId, filters) {
+    return request(`/cases/${encodeURIComponent(caseId)}/timeline${queryString(filters)}`);
   }
 
   function getLocations(caseId) {
@@ -148,19 +173,28 @@ const Api = (function () {
     return request(`/cases/${encodeURIComponent(caseId)}/communications`);
   }
 
-  function getAnalysis(caseId) {
-    return request(`/cases/${encodeURIComponent(caseId)}/analysis`);
+  // `timeWindowMinutes` maps to the backend's time_window_minutes query
+  // parameter (1-1440). Omit it to use the backend's default.
+  function getAnalysis(caseId, timeWindowMinutes) {
+    const query = timeWindowMinutes ? queryString({ time_window_minutes: timeWindowMinutes }) : "";
+    return request(`/cases/${encodeURIComponent(caseId)}/analysis${query}`);
   }
 
   function getReport(caseId) {
     return request(`/cases/${encodeURIComponent(caseId)}/report`);
   }
 
+  function health() {
+    return request("/health");
+  }
+
   return {
+    health,
     createCase,
     getCases,
     getCase,
     uploadEvidence,
+    getEvidence,
     getTimeline,
     getLocations,
     getCommunications,
